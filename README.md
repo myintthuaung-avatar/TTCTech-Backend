@@ -11,35 +11,8 @@ Backend for a single-choice IT exam application:
 Built with **.NET 9**, **ASP.NET Core Web API**, and **EF Core / SQL Server**,
 using a layered architecture with a generic repository + unit of work pattern.
 
-## Architecture
-
-```
-src/
-  ExampleCompany.Exam.Domain/          Entities only. No dependencies on anything else.
-  ExampleCompany.Exam.Application/     DTOs, service interfaces, IRepository<T>/IUnitOfWork
-                                        contracts, and ExamService (business/grading logic).
-  ExampleCompany.Exam.Infrastructure/  EF Core DbContext, generic Repository<T>, entity-specific
-                                        repositories, UnitOfWork, and mock seed data.
-  ExampleCompany.Exam.Api/             Controllers, Program.cs (composition root), Swagger, CORS.
-tests/
-  ExampleCompany.Exam.Tests/           Unit tests for ExamService (scoring, validation).
-```
-
 Dependency direction: `Api → Infrastructure → Application → Domain`
 (`Api` also references `Application` directly for its interfaces/DTOs).
-
-### Why a generic repository + unit of work
-
-`IRepository<T>` implements the CRUD operations every entity needs once. Entity
--specific repositories (`IExamPaperRepository`, `IExamAttemptRepository`) extend
-it only to add the one or two queries that are genuinely specific to that
-entity (eager-loading the question/choice graph, for example) — rather than
-either duplicating CRUD per entity, or forcing every specialised query through
-a single bloated generic interface.
-
-`IUnitOfWork` groups the repositories that participate in one request and
-commits them together with a single `SaveChangesAsync`, so a submission's
-`ExamAttempt` and its `ExamAnswer` rows are always written atomically.
 
 ### Grading is always server-side
 
@@ -51,7 +24,7 @@ correctness flag) sent by the client.
 ## Prerequisites
 
 - [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-- A local or reachable SQL Server instance (SQL Server, Azure SQL, or
+- A local or reachable SQL Server instance (SQL Server or
   SQL Server in Docker all work)
 
 ## Setup
@@ -105,7 +78,7 @@ dotnet test
 
 ```json
 {
-  "examineeName": "Jane Doe",
+  "examineeName": "Myint",
   "answers": [
     { "questionId": 1, "choiceId": 2 },
     { "questionId": 2, "choiceId": 5 }
@@ -118,7 +91,7 @@ dotnet test
 ```json
 {
   "attemptId": 1,
-  "examineeName": "Jane Doe",
+  "examineeName": "Myint",
   "score": 2,
   "totalQuestions": 5,
   "submittedAtUtc": "2026-09-04T10:00:00Z",
